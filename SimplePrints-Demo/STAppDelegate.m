@@ -6,14 +6,19 @@
 //  Copyright (c) 2014 StoryTree. All rights reserved.
 //
 
-#import "HUAppDelegate.h"
+#import "STAppDelegate.h"
+#import "STPhotoCollectionViewController.h"
 
-@implementation HUAppDelegate
+@implementation STAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    // Override point for customization after application launch.
+    
+    STPhotoCollectionViewController *photoCollectionVC = [[STPhotoCollectionViewController alloc] init];
+    self.viewController = (UIViewController *)[[UINavigationController alloc] initWithRootViewController:photoCollectionVC];
+    self.window.rootViewController = self.viewController;
+    
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
     return YES;

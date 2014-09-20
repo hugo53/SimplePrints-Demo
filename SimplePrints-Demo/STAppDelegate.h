@@ -8,8 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
-@interface HUAppDelegate : UIResponder <UIApplicationDelegate>
+@interface STAppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
+@property (strong, nonatomic) UIViewController *viewController;
 
 @end

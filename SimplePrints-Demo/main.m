@@ -8,11 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
-#import "HUAppDelegate.h"
+#import "STAppDelegate.h"
 
 int main(int argc, char * argv[])
 {
     @autoreleasepool {
-        return UIApplicationMain(argc, argv, nil, NSStringFromClass([HUAppDelegate class]));
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass([STAppDelegate class]));
     }
 }
