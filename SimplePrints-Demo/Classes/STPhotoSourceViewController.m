@@ -11,6 +11,7 @@
 #import "SDImageCache.h"
 #import "MWCommon.h"
 #import "STAlbumListViewController.h"
+#import "STCustomCell.h"
 
 @interface STPhotoSourceViewController ()
 
@@ -21,11 +22,6 @@
 - (instancetype)init
 {
     self = [super init];
-    if (self) {
-        // Clear cache
-//        [[SDImageCache sharedImageCache] clearDisk];
-//        [[SDImageCache sharedImageCache] clearMemory];
-    }
     return self;
 }
 
@@ -42,8 +38,32 @@
     backButton.imageEdgeInsets = UIEdgeInsetsMake(0.0, -shiftRightOffset, 0, shiftRightOffset);
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
     
-    [self loadPhotoAssets];
-
+    _assetGroups = [[NSMutableArray alloc] init];
+    _assetLibrary = [[ALAssetsLibrary alloc] init];
+    
+    // Load local photo albums
+    [self loadAlbumAssetsWithAssetType:ALAssetsGroupSavedPhotos];
+    
+    double delayInSeconds = .2;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        [self loadAlbumAssetsWithAssetType:ALAssetsGroupAlbum];
+    });
+    
+    _assetOfGroups = [[NSMutableArray alloc] init];
+    
+    delayInSeconds = .5;
+    popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        for (ALAssetsGroup *group in _assetGroups) {
+            NSMutableArray *assetList = [[NSMutableArray alloc] init];
+            [_assetOfGroups addObject:assetList];
+            [self getListPhotoOfGroup:group insertInto:assetList];
+        }
+    });
+    
+    
     _listPhotoSourceTbl = [[UITableView alloc] initWithFrame:self.view.bounds
                                                        style:UITableViewStylePlain];
     
@@ -88,10 +108,11 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    NSInteger rows = 2;
-//    @synchronized(_assets) {
-//        if (_assets.count) rows++;
-//    }
+    NSInteger rows = 1;
+    @synchronized(_assetGroups) {
+        if (_assetGroups.count)
+            rows += _assetGroups.count;
+    }
     return rows;
 }
 
@@ -101,89 +122,107 @@
     static NSString *CellIdentifier = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
+        cell = [[STCustomCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
     }
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     
-    // Configure
-	switch (indexPath.row) {
-		case 0: {
-            cell.textLabel.text = @"Library Photos";
-            break;
+    if (indexPath.row == 0) {
+        // Camera roll
+        if (_assetGroups && _assetGroups.count > 0) {
+            ALAssetsGroup *assetGroup = [_assetGroups objectAtIndex:0];
+            cell.textLabel.text = [NSString stringWithFormat:@"%@ (%d)", [assetGroup valueForProperty:ALAssetsGroupPropertyName], [assetGroup numberOfAssets]];
+            cell.imageView.image = [UIImage imageWithCGImage:[assetGroup posterImage]];
+        }else {
+            cell.textLabel.text = [NSString stringWithFormat:@"%@ (%d)", NSLocalizedString(@"Camera Roll", nil), 0];
         }
-		case 1: {
-            cell.textLabel.text = @"Facebook Photos";
-            break;
+    }else if (indexPath.row == 1) {
+        // FB
+        cell.textLabel.text = NSLocalizedString(@"Facebook Photos", nil);
+        cell.imageView.image = [UIImage imageNamed:@"facebook-icon"];
+    }else if (indexPath.row > 1) {
+        // Other local album
+        if (_assetGroups && _assetGroups.count >= indexPath.row) {
+            ALAssetsGroup *assetGroup = [_assetGroups objectAtIndex:indexPath.row-1];
+            cell.textLabel.text = [NSString stringWithFormat:@"%@ (%d)", [assetGroup valueForProperty:ALAssetsGroupPropertyName], [assetGroup numberOfAssets]];
+            cell.imageView.image = [UIImage imageWithCGImage:[assetGroup posterImage]];
         }
-		default: break;
-	}
+    }
+    
     return cell;
-	
 }
 
-#pragma mark -
 #pragma mark Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	
+    
 	// Browser
 	NSMutableArray *photos = [[NSMutableArray alloc] init];
 	NSMutableArray *thumbs = [[NSMutableArray alloc] init];
     
-	switch (indexPath.row) {
-		case 0:
-            @synchronized(_assets) {
-                NSMutableArray *copy = [_assets copy];
-                
-                if (copy.count == 0) {
-                    // No image
-                    break;
-                }
-                for (ALAsset *asset in copy) {
-                    [photos addObject:[MWPhoto photoWithURL:asset.defaultRepresentation.url]];
-                    [thumbs addObject:[MWPhoto photoWithImage:[UIImage imageWithCGImage:asset.thumbnail]]];
-                }
-                
-                self.photos = photos;
-                self.thumbs = thumbs;
-                
-                // Create browser
-                MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
-                browser.displayActionButton = NO;
-                browser.displayNavArrows = YES;
-                browser.displaySelectionButtons = YES;
-                browser.alwaysShowControls = YES;
-                browser.zoomPhotosToFill = YES;
-#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
-                browser.wantsFullScreenLayout = YES;
-#endif
-                browser.enableGrid = NO;
-                browser.startOnGrid = YES;
-                browser.enableSwipeToDismiss = YES;
-                [browser setCurrentPhotoIndex:0];
-                
-                browser.allowLeftBtnOnNavigation = YES;
-                
-                // Reset selections
-                if (browser.displaySelectionButtons) {
-                    _selections = [NSMutableArray new];
-                    for (int i = 0; i < photos.count; i++) {
-                        [_selections addObject:[NSNumber numberWithBool:NO]];
-                    }
-                }
-                
-                [self.navigationController pushViewController:browser animated:YES];
-            }
-			break;
-		case 1: {
-            STAlbumListViewController *fbAlbumList = [[STAlbumListViewController alloc] init];
-            fbAlbumList.photoCollectionVC = _photoCollectionVC;
-            [self.navigationController pushViewController:fbAlbumList animated:YES];
+    if (indexPath.row == 0 || (indexPath.row > 1)) {
+        // Camera roll
+        @synchronized(_assetOfGroups) {
+            int index = 0;
             
-			break;
+            if (indexPath.row == 0) {
+                index = 0;
+            }else {
+                index = indexPath.row - 1;
+            }
+            
+
+            NSMutableArray *copy = [[_assetOfGroups objectAtIndex:index] copy];
+            
+            if (copy.count == 0) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Something went wrong", nil) message:NSLocalizedString(@"Maybe permission to access photos is not granted. Please check in Settings->Privacy->Photos", nil) delegate:nil cancelButtonTitle:nil otherButtonTitles:NSLocalizedString(@"OK", nil), nil];
+                    [alert show];
+                });
+                [_listPhotoSourceTbl deselectRowAtIndexPath:indexPath animated:YES];
+                return;
+            }
+            
+            for (ALAsset *asset in copy) {
+                [photos addObject:[MWPhoto photoWithURL:asset.defaultRepresentation.url]];
+                [thumbs addObject:[MWPhoto photoWithImage:[UIImage imageWithCGImage:asset.thumbnail]]];
+            }
+            
+            self.photos = photos;
+            self.thumbs = thumbs;
+            
+            // Create browser
+            MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
+            browser.displayActionButton = NO;
+            browser.displayNavArrows = YES;
+            browser.displaySelectionButtons = YES;
+            browser.alwaysShowControls = YES;
+            browser.zoomPhotosToFill = YES;
+#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
+            browser.wantsFullScreenLayout = YES;
+#endif
+            browser.enableGrid = NO;
+            browser.startOnGrid = YES;
+            browser.enableSwipeToDismiss = YES;
+            [browser setCurrentPhotoIndex:0];
+            
+            browser.allowLeftBtnOnNavigation = YES;
+            
+            // Reset selections
+            if (browser.displaySelectionButtons) {
+                _selections = [NSMutableArray new];
+                for (int i = 0; i < photos.count; i++) {
+                    [_selections addObject:[NSNumber numberWithBool:NO]];
+                }
+            }
+            
+            [self.navigationController pushViewController:browser animated:YES];
         }
-		default: break;
-	}
+    }else if (indexPath.row == 1) {
+        // FB
+        STAlbumListViewController *fbAlbumList = [[STAlbumListViewController alloc] init];
+        fbAlbumList.photoCollectionVC = _photoCollectionVC;
+        [self.navigationController pushViewController:fbAlbumList animated:YES];
+    }
 	
 	// Deselect
 	[_listPhotoSourceTbl deselectRowAtIndexPath:indexPath animated:YES];
@@ -208,7 +247,6 @@
 }
 
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser didDisplayPhotoAtIndex:(NSUInteger)index {
-    NSLog(@"Did start viewing photo at index %lu", (unsigned long)index);
 }
 
 - (BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isPhotoSelectedAtIndex:(NSUInteger)index {
@@ -217,7 +255,6 @@
 
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected {
     [_selections replaceObjectAtIndex:index withObject:[NSNumber numberWithBool:selected]];
-    NSLog(@"Photo at index %lu selected %@", (unsigned long)index, selected ? @"YES" : @"NO");
     
     if (selected) {
         if (!_selectedPhotos) {
@@ -232,7 +269,6 @@
 }
 
 - (void)photoBrowserDidFinishModalPresentation:(MWPhotoBrowser *)photoBrowser {
-    NSLog(@"Did finish modal presentation");
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -263,61 +299,61 @@
 
 #pragma mark - Load Assets
 
-- (void)loadPhotoAssets {
-    
-    // Initialise
-    _assets = [NSMutableArray new];
-    _assetLibrary = [[ALAssetsLibrary alloc] init];
-    
-    // Run in the background as it takes a while to get all assets from the library
+- (void)loadAlbumAssetsWithAssetType:(ALAssetsGroupType) assetGroupType {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
-        NSMutableArray *assetGroups = [[NSMutableArray alloc] init];
-        NSMutableArray *assetURLDictionaries = [[NSMutableArray alloc] init];
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+        // Process groups
+        void (^ assetGroupEnumerator) (ALAssetsGroup *, BOOL *) = ^(ALAssetsGroup *group, BOOL *stop) {
+            if (group != nil) {
+                [_assetGroups addObject:group];
+                dispatch_semaphore_signal(sema);
+                NSLog(@"Album name: %@ has %d photos", [group valueForProperty:ALAssetsGroupPropertyName], [group numberOfAssets]);
+                
+                [_listPhotoSourceTbl performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:NO];
+            }
+        };
         
-        // Process assets
+        // Process!
+        [self.assetLibrary enumerateGroupsWithTypes:assetGroupType
+                                         usingBlock:assetGroupEnumerator
+                                       failureBlock:^(NSError *error) {
+                                           NSLog(@"There is an error");
+                                           dispatch_semaphore_signal(sema);
+                                       }];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    });
+}
+
+- (void) getListPhotoOfGroup:(ALAssetsGroup *) group insertInto:(NSMutableArray *) resultList {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
         void (^assetEnumerator)(ALAsset *, NSUInteger, BOOL *) = ^(ALAsset *result, NSUInteger index, BOOL *stop) {
+            
             if (result != nil) {
                 if ([[result valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypePhoto]) {
-                    [assetURLDictionaries addObject:[result valueForProperty:ALAssetPropertyURLs]];
                     NSURL *url = result.defaultRepresentation.url;
                     [_assetLibrary assetForURL:url
                                    resultBlock:^(ALAsset *asset) {
                                        if (asset) {
-                                           @synchronized(_assets) {
-                                               [_assets addObject:asset];
-                                               if (_assets.count == 1) {
-                                                   // Added first asset so reload data
-                                                   [_listPhotoSourceTbl performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:NO];
-                                               }
+                                           @synchronized(resultList) {
+                                               
+                                               [resultList addObject:asset];
+                                               dispatch_semaphore_signal(sema);
                                            }
                                        }
                                    }
                                   failureBlock:^(NSError *error){
-                                      NSLog(@"operation was not successfull!");
+                                      dispatch_semaphore_signal(sema);
                                   }];
                     
                 }
             }
         };
         
-        // Process groups
-        void (^ assetGroupEnumerator) (ALAssetsGroup *, BOOL *) = ^(ALAssetsGroup *group, BOOL *stop) {
-            if (group != nil) {
-                [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:assetEnumerator];
-                [assetGroups addObject:group];
-            }
-        };
-        
-        // Process!
-        [self.assetLibrary enumerateGroupsWithTypes:ALAssetsGroupAll
-                                         usingBlock:assetGroupEnumerator
-                                       failureBlock:^(NSError *error) {
-                                           NSLog(@"There is an error");
-                                       }];
-        
+        [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:assetEnumerator];
+        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     });
-    
 }
 
 #pragma mark Navigation handling

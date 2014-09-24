@@ -1739,6 +1739,7 @@
         
         [self showGridAnimated];
     }else {
+        _pressedBack = YES;
         [self.navigationController popViewControllerAnimated:YES];
     }
 }

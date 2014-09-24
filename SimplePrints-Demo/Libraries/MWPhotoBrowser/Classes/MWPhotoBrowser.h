@@ -61,6 +61,8 @@
 @property (nonatomic) BOOL allowRightBtnOnNavigation;
 @property (nonatomic) BOOL allowLeftBtnOnNavigation;
 
+@property (nonatomic) BOOL pressedBack;
+
 // Init
 - (id)initWithPhotos:(NSArray *)photosArray  __attribute__((deprecated("Use initWithDelegate: instead"))); // Depreciated
 - (id)initWithDelegate:(id <MWPhotoBrowserDelegate>)delegate;

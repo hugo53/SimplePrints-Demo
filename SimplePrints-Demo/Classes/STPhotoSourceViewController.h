@@ -23,8 +23,9 @@
 @property (nonatomic, strong) ALAssetsLibrary *assetLibrary;
 @property (nonatomic, strong) NSMutableArray *assets;
 
-@property (nonatomic, strong) STPhotoCollectionViewController *photoCollectionVC;
+@property (nonatomic, strong) NSMutableArray *assetGroups;
+@property (nonatomic, strong) NSMutableArray *assetOfGroups; // List of NSMutable Array, which contains assets of each group
 
-- (void)loadPhotoAssets;
+@property (nonatomic, strong) STPhotoCollectionViewController *photoCollectionVC;
 
 @end
