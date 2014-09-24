@@ -66,7 +66,7 @@
 		201D21A219C9265900B747CA /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 201D218A19C9265900B747CA /* UIKit.framework */; };
 		201D21AA19C9265900B747CA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 201D21A819C9265900B747CA /* InfoPlist.strings */; };
 		201D21AC19C9265900B747CA /* SimplePrints_DemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 201D21AB19C9265900B747CA /* SimplePrints_DemoTests.m */; };
-		20766E0419CA220A006D5C62 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20766E0319CA220A006D5C62 /* FacebookSDK.framework */; };
+		2027937C19D2A39900E90AE1 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2027937B19D2A39900E90AE1 /* FacebookSDK.framework */; };
 		207A018619CCDB68005FC287 /* STAlbum.m in Sources */ = {isa = PBXBuildFile; fileRef = 207A018519CCDB68005FC287 /* STAlbum.m */; };
 		207A018919CCDB95005FC287 /* STPhoto.m in Sources */ = {isa = PBXBuildFile; fileRef = 207A018819CCDB95005FC287 /* STPhoto.m */; };
 		207A019019CCFE35005FC287 /* NSObject+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = 207A018F19CCFE35005FC287 /* NSObject+Helper.m */; };
@@ -198,7 +198,7 @@
 		201D21A719C9265900B747CA /* SimplePrints-DemoTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SimplePrints-DemoTests-Info.plist"; sourceTree = "<group>"; };
 		201D21A919C9265900B747CA /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		201D21AB19C9265900B747CA /* SimplePrints_DemoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimplePrints_DemoTests.m; sourceTree = "<group>"; };
-		20766E0319CA220A006D5C62 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FacebookSDK.framework; path = ../../../../../Users/hoang/Documents/FacebookSDK/FacebookSDK.framework; sourceTree = "<group>"; };
+		2027937B19D2A39900E90AE1 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
 		207A018419CCDB68005FC287 /* STAlbum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = STAlbum.h; path = Classes/STAlbum.h; sourceTree = "<group>"; };
 		207A018519CCDB68005FC287 /* STAlbum.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = STAlbum.m; path = Classes/STAlbum.m; sourceTree = "<group>"; };
 		207A018719CCDB95005FC287 /* STPhoto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = STPhoto.h; path = Classes/STPhoto.h; sourceTree = "<group>"; };
@@ -225,9 +225,9 @@
 				2008F26B19CBFAB200450F6D /* Accounts.framework in Frameworks */,
 				2008F26919CBFAAC00450F6D /* Social.framework in Frameworks */,
 				201D218919C9265900B747CA /* CoreGraphics.framework in Frameworks */,
-				20766E0419CA220A006D5C62 /* FacebookSDK.framework in Frameworks */,
 				201D218B19C9265900B747CA /* UIKit.framework in Frameworks */,
 				201D218719C9265800B747CA /* Foundation.framework in Frameworks */,
+				2027937C19D2A39900E90AE1 /* FacebookSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -417,9 +417,9 @@
 		201D218519C9265800B747CA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2027937B19D2A39900E90AE1 /* FacebookSDK.framework */,
 				2008F26A19CBFAB200450F6D /* Accounts.framework */,
 				2008F26819CBFAAC00450F6D /* Social.framework */,
-				20766E0319CA220A006D5C62 /* FacebookSDK.framework */,
 				201D218619C9265800B747CA /* Foundation.framework */,
 				201D218819C9265900B747CA /* CoreGraphics.framework */,
 				201D218A19C9265900B747CA /* UIKit.framework */,
@@ -794,6 +794,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/hoang/Documents/FacebookSDK,
+					"$(PROJECT_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SimplePrints-Demo/SimplePrints-Demo-Prefix.pch";
@@ -812,6 +813,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/hoang/Documents/FacebookSDK,
+					"$(PROJECT_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SimplePrints-Demo/SimplePrints-Demo-Prefix.pch";
