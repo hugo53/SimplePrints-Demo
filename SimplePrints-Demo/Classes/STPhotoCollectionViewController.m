@@ -32,7 +32,6 @@
     _photos = [[NSMutableArray alloc] init];
     _thumbs = [[NSMutableArray alloc] init];
     
-    _thumbs = _photos;
     _browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
     _browser.displayActionButton = NO;
     _browser.displayNavArrows = YES;
@@ -63,7 +62,6 @@
 
 - (void) viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    _thumbs = _photos;
 }
 
 - (void)didReceiveMemoryWarning

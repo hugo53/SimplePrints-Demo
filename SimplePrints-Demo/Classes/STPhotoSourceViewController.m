@@ -19,12 +19,6 @@
 
 @implementation STPhotoSourceViewController
 
-- (instancetype)init
-{
-    self = [super init];
-    return self;
-}
-
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
