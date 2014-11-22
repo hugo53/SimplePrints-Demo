@@ -150,20 +150,11 @@
     return [NSString stringWithFormat:@"%d", [self getYear:date]];
 }
 
-/**
- *  <#Description#>
- *
- *  @param calculatingDate <#calculatingDate description#>
- *  @param rootDate        <#rootDate description#>
- *
- *  @return negative if the calculating Date is past, positive if the calculating date is future
- */
 + (NSInteger) getIndexFromDate:(NSDate *) calculatingDate withRootDate:(NSDate *) rootDate{
     float different = [calculatingDate timeIntervalSinceDate:rootDate];
     
     return (int) different/(24*60*60);
 }
-
 
 + (BOOL) aDate:(NSDate *) aDate isEqualToDate:(NSDate *) anotherDate {
     if ([self getYear:aDate] == [self getYear:anotherDate]

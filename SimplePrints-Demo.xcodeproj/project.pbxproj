@@ -215,6 +215,7 @@
 		207A019919CD3039005FC287 /* UIImage+Scaling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+Scaling.m"; sourceTree = "<group>"; };
 		207A019E19CD3D3E005FC287 /* STCustomCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = STCustomCell.h; path = Classes/STCustomCell.h; sourceTree = "<group>"; };
 		207A019F19CD3D3E005FC287 /* STCustomCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = STCustomCell.m; path = Classes/STCustomCell.m; sourceTree = "<group>"; };
+		209A40991A204A6100ADF6EB /* Define.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Define.h; path = Classes/Define.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -448,6 +449,7 @@
 				201D218F19C9265900B747CA /* InfoPlist.strings */,
 				201D219219C9265900B747CA /* main.m */,
 				201D219419C9265900B747CA /* SimplePrints-Demo-Prefix.pch */,
+				209A40991A204A6100ADF6EB /* Define.h */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";

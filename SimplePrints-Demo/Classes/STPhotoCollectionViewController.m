@@ -24,7 +24,6 @@
     return self;
 }
 
-
 - (void) loadView {
     [super loadView];
     self.view.backgroundColor = [UIColor whiteColor];
@@ -97,7 +96,7 @@
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 
-
+#pragma mark Logic functions
 - (void) addMoreImageIntoPhotoBrowser:(MWPhotoBrowser *)photoBrowser {
     if (!_photoSourceVC) {
         _photoSourceVC = [[STPhotoSourceViewController alloc] init];
@@ -107,6 +106,5 @@
     
     [self.navigationController pushViewController:_photoSourceVC animated:YES];
 }
-
 
 @end

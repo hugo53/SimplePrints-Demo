@@ -31,15 +31,6 @@
 
 @implementation STAlbumListViewController
 
-- (instancetype)init
-{
-    self = [super init];
-    if (self) {
-        
-    }
-    return self;
-}
-
 - (void) loadView {
     [super loadView];
     
@@ -102,11 +93,9 @@
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 #pragma mark - Table view data source
-
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     // Return the number of sections.
@@ -149,12 +138,9 @@
     }
     
     return cell;
-	
 }
 
-#pragma mark -
 #pragma mark Table view delegate
-
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     return 50;
 }
@@ -166,11 +152,10 @@
         
         [_photos removeAllObjects];
         [_thumbs removeAllObjects];
+        
         // Create browser
         MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
-        
         browser.view.tag = indexPath.row;
-        
         browser.displayActionButton = NO;
         browser.displayNavArrows = YES;
         browser.displaySelectionButtons = YES;
@@ -188,7 +173,7 @@
         
         [self.navigationController pushViewController:browser animated:YES];
         
-        NSString *requestStr = [NSString stringWithFormat:@"https://graph.facebook.com/%@/photos", currentAlbum.albumId];
+        NSString *requestStr = [NSString stringWithFormat:FACEBOOK_GET_PHOTOS_FORMAT, currentAlbum.albumId];
         [self getListPhotoIdOfAlbum:currentAlbum withRequest:requestStr completion:^(NSData *responseData, NSError *error) {
             
             if (!error) {
@@ -229,19 +214,14 @@
                 });
             }
         }];
-        
-        
     }
 	
-	// Deselect
 	[_albumListTbl deselectRowAtIndexPath:indexPath animated:YES];
 }
 
 #pragma mark - MWPhotoBrowserDelegate
-
 - (NSUInteger)numberOfPhotosInPhotoBrowser:(MWPhotoBrowser *)photoBrowser {
     if (_photos) {
-        NSLog(@"Number of photos: %d", _photos.count);
         return _photos.count;
     }
     return 0;
@@ -260,7 +240,6 @@
     }
     return nil;
 }
-
 
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser didDisplayPhotoAtIndex:(NSUInteger)index {
 }
@@ -288,28 +267,6 @@
     [photoBrowser enableAddSelectedPhotoBtn:(_selectedPhotos.count > 0)];
 }
 
-- (void) addSelectedPhotoFromPhotoBrowser:(MWPhotoBrowser *)photoBrowser {
-    [_photoCollectionVC.photos addObjectsFromArray:[_selectedPhotos copy]];
-    _photoCollectionVC.thumbs = [_photoCollectionVC.photos copy];
-    
-    // Create browser
-	MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:_photoCollectionVC];
-    browser.displayActionButton = NO;
-    browser.displayNavArrows = YES;
-    browser.enableGrid = NO;
-    browser.startOnGrid = YES;
-    browser.enableSwipeToDismiss = YES;
-    [browser setCurrentPhotoIndex:0];
-    browser.allowRightBtnOnNavigation = YES;
-    browser.showAddSelectedPhotoBtn = NO;
-    
-    NSMutableArray * viewControllers = [NSMutableArray arrayWithArray:[self.navigationController viewControllers]];
-    [viewControllers replaceObjectAtIndex:1 withObject:browser];
-    [self.navigationController setViewControllers:viewControllers];
-    
-    [self.navigationController popToViewController:browser animated:YES];
-}
-
 #pragma mark - Handle Facebook data request
 - (void) loadAlbumList {
     // Facebook
@@ -317,18 +274,11 @@
     ACAccountType *fbAccountType = [fbAccountStore accountTypeWithAccountTypeIdentifier:
                                     ACAccountTypeIdentifierFacebook];
     
-    NSDictionary *optionDict = @{ACFacebookAppIdKey : @"803742409678093",
+    NSDictionary *optionDict = @{ACFacebookAppIdKey : FACEBOOK_APP_KEY,
                                  ACFacebookPermissionsKey : @[@"user_photos"],
                                  ACFacebookAudienceKey: ACFacebookAudienceFriends};
     
-    [fbAccountStore requestAccessToAccountsWithType:fbAccountType options:optionDict completion:^(BOOL granted, NSError *error) {
-        if (granted) {
-//            NSArray *accounts = [fbAccountStore accountsWithAccountType:fbAccountType];
-//            
-//            ACAccountCredential *facebookCredential = [[accounts lastObject] credential];
-//            NSString *accessToken = [facebookCredential oauthToken];
-        } else{}
-    }];
+    [fbAccountStore requestAccessToAccountsWithType:fbAccountType options:optionDict completion:^(BOOL granted, NSError *error) {}];
     
     if (fbAccountType.accessGranted) {
         // Fetch albums from fb
@@ -343,7 +293,7 @@
         
         SLRequest *albumListRequest = [SLRequest requestForServiceType:SLServiceTypeFacebook
                                                            requestMethod:SLRequestMethodGET
-                                                                     URL:[NSURL URLWithString:@"https://graph.facebook.com/me/albums"]
+                                                                     URL:[NSURL URLWithString:FACEBOOK_GET_ALBUMS_PATH]
                                                               parameters:nil];
         
         _fbAccount = [[fbAccountStore accountsWithAccountType:fbAccountType] lastObject];
@@ -356,9 +306,9 @@
                                                                                     options:NSJSONReadingAllowFragments
                                                                                       error:&jsonError];
                     if (jsonError) {
-                        NSLog(@"Error parsing album list: %@", jsonError);
+                        DLog(@"Error parsing album list: %@", jsonError);
                     } else {
-                        NSLog(@"Data is: %@", photoAlbumData[@"data"]);
+                        DLog(@"Data is: %@", photoAlbumData[@"data"]);
                         NSArray *tmpPhotoAlbums = photoAlbumData[@"data"];
                         for (NSDictionary *albumDict in tmpPhotoAlbums) {
                             
@@ -381,23 +331,19 @@
                             
                             [self getCoverPhotoForAlbum:album withCoverPhotoId:albumDict[@"cover_photo"]];
                         }
-                        
-                        
                     }
                 } else {
-                    NSLog(@"HTTP %ld returned", (long)urlResponse.statusCode);
+                    DLog(@"HTTP %ld returned", (long)urlResponse.statusCode);
                     
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [MBProgressHUD hideHUDForView:self.view animated:YES];
                     });
                     
-                    
                     [fbAccountStore renewCredentialsForAccount:_fbAccount completion:^(ACAccountCredentialRenewResult renewResult, NSError *error) {
-                        
                     }];
                 }
             } else {
-                NSLog(@"ERROR Connecting");
+                DLog(@"ERROR Connecting");
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [MBProgressHUD hideHUDForView:self.view animated:YES];
                 });
@@ -414,11 +360,10 @@
     }
 }
 
-
 -(void) getCoverPhotoForAlbum:(STAlbum *) album withCoverPhotoId:(NSString *) coverPhotoId {
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
     
-    NSString *requestStr = [NSString stringWithFormat:@"https://graph.facebook.com/%@", coverPhotoId];
+    NSString *requestStr = [NSString stringWithFormat:FACEBOOK_GET_FORMAT, coverPhotoId];
     SLRequest *photoRequest = [SLRequest requestForServiceType:SLServiceTypeFacebook
                                                        requestMethod:SLRequestMethodGET
                                                                  URL:[NSURL URLWithString:requestStr]
@@ -433,24 +378,23 @@
                                                                                options:NSJSONReadingAllowFragments
                                                                                  error:&jsonError];
                 if (jsonError) {
-                    NSLog(@"Error parsing photo data: %@", jsonError);
+                    DLog(@"Error parsing photo data: %@", jsonError);
                 } else {
                     STPhoto *coverPhoto = [[STPhoto alloc] initWithPhotoId:coverPhotoId
                                                                photoSource:photoData[@"picture"]];
                     album.coverPhoto = coverPhoto;
                     
-                    NSLog(@"Did add cover for album: %@", album.albumName);
+                    DLog(@"Did add cover for album: %@", album.albumName);
                     
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [_albumListTbl reloadData];
                     });
                 }
             } else {
-                NSLog(@"HTTP %ld returned", (long)urlResponse.statusCode);
-                
+                DLog(@"HTTP %ld returned", (long)urlResponse.statusCode);
             }
         } else {
-            NSLog(@"ERROR Connecting");
+            DLog(@"ERROR Connecting");
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -477,7 +421,7 @@
                                                                           options:NSJSONReadingAllowFragments
                                                                             error:&jsonError];
                 if (jsonError) {
-                    NSLog(@"Error parsing photo data: %@", jsonError);
+                    DLog(@"Error parsing photo data: %@", jsonError);
                 } else {
                     NSArray *photosList = photosData[@"data"];
                     
@@ -501,31 +445,42 @@
                     }
                     
                     completion(responseData, error);
-                    
-//                    NSDictionary *pagingDict = photosData[@"paging"];
-//                    if (pagingDict) {
-//                        NSLog(@"After point %@", pagingDict[@"cursors"][@"after"]);
-//                        NSString *requestStr = [NSString stringWithFormat:@"https://graph.facebook.com/%@/photos\?after=%@", album.albumId, pagingDict[@"cursors"][@"after"]];
-//                        NSLog(@"next request:%@", requestStr);
-
-//                        [self getListPhotoIdOfAlbum:album withRequest:requestStr completion:^(NSData *response, NSError *error) {
-//                            completion (responseData, error);
-//                        }];
-//                    }
                 }
             } else {
-                NSLog(@"HTTP %ld returned", (long)urlResponse.statusCode);
+                DLog(@"HTTP %ld returned", (long)urlResponse.statusCode);
                 
             }
         } else {
-            NSLog(@"ERROR Connecting");
+            DLog(@"ERROR Connecting");
         }
     
         dispatch_async(dispatch_get_main_queue(), ^{
             [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
         });
     }];
+}
 
+#pragma mark Logic functions
+- (void) addSelectedPhotoFromPhotoBrowser:(MWPhotoBrowser *)photoBrowser {
+    [_photoCollectionVC.photos addObjectsFromArray:[_selectedPhotos copy]];
+    _photoCollectionVC.thumbs = [_photoCollectionVC.photos copy];
+    
+    // Create browser
+    MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:_photoCollectionVC];
+    browser.displayActionButton = NO;
+    browser.displayNavArrows = YES;
+    browser.enableGrid = NO;
+    browser.startOnGrid = YES;
+    browser.enableSwipeToDismiss = YES;
+    [browser setCurrentPhotoIndex:0];
+    browser.allowRightBtnOnNavigation = YES;
+    browser.showAddSelectedPhotoBtn = NO;
+    
+    NSMutableArray * viewControllers = [NSMutableArray arrayWithArray:[self.navigationController viewControllers]];
+    [viewControllers replaceObjectAtIndex:1 withObject:browser];
+    [self.navigationController setViewControllers:viewControllers];
+    
+    [self.navigationController popToViewController:browser animated:YES];
 }
 
 #pragma mark Navigation handling

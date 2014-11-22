@@ -13,10 +13,6 @@
 #import "STAlbumListViewController.h"
 #import "STCustomCell.h"
 
-@interface STPhotoSourceViewController ()
-
-@end
-
 @implementation STPhotoSourceViewController
 
 - (void)viewDidLoad {
@@ -57,7 +53,6 @@
         }
     });
     
-    
     _listPhotoSourceTbl = [[UITableView alloc] initWithFrame:self.view.bounds
                                                        style:UITableViewStylePlain];
     
@@ -94,9 +89,7 @@
     return UIStatusBarAnimationNone;
 }
 
-#pragma mark -
 #pragma mark Table view data source
-
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
     return 1;
 }
@@ -112,7 +105,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     
-	// Create
+    // Create
     static NSString *CellIdentifier = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
@@ -130,7 +123,7 @@
             cell.textLabel.text = [NSString stringWithFormat:@"%@ (%d)", NSLocalizedString(@"Camera Roll", nil), 0];
         }
     }else if (indexPath.row == 1) {
-        // FB
+        // Facebook Images
         cell.textLabel.text = NSLocalizedString(@"Facebook Photos", nil);
         cell.imageView.image = [UIImage imageNamed:@"facebook-icon"];
     }else if (indexPath.row > 1) {
@@ -149,7 +142,6 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     
-	// Browser
 	NSMutableArray *photos = [[NSMutableArray alloc] init];
 	NSMutableArray *thumbs = [[NSMutableArray alloc] init];
     
@@ -163,7 +155,6 @@
             }else {
                 index = indexPath.row - 1;
             }
-            
 
             NSMutableArray *copy = [[_assetOfGroups objectAtIndex:index] copy];
             
@@ -208,17 +199,15 @@
                     [_selections addObject:[NSNumber numberWithBool:NO]];
                 }
             }
-            
             [self.navigationController pushViewController:browser animated:YES];
         }
     }else if (indexPath.row == 1) {
-        // FB
+        // Facebook Images
         STAlbumListViewController *fbAlbumList = [[STAlbumListViewController alloc] init];
         fbAlbumList.photoCollectionVC = _photoCollectionVC;
         [self.navigationController pushViewController:fbAlbumList animated:YES];
     }
 	
-	// Deselect
 	[_listPhotoSourceTbl deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -266,33 +255,7 @@
     [self dismissViewControllerAnimated:YES completion:nil];
 }
 
-- (void) addSelectedPhotoFromPhotoBrowser:(MWPhotoBrowser *)photoBrowser {
-    _photos = [_selectedPhotos copy];
-    _thumbs = [_photos copy];
-    
-    [_photoCollectionVC.photos addObjectsFromArray:_photos];
-    _photoCollectionVC.thumbs = [_photoCollectionVC.photos copy];
-    
-    // Create browser
-	MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:_photoCollectionVC];
-    browser.displayActionButton = NO;
-    browser.displayNavArrows = YES;
-    browser.enableGrid = NO;
-    browser.startOnGrid = YES;
-    browser.enableSwipeToDismiss = YES;
-    [browser setCurrentPhotoIndex:0];
-    browser.allowRightBtnOnNavigation = YES;
-    browser.showAddSelectedPhotoBtn = NO;
-    
-    NSMutableArray * viewControllers = [NSMutableArray arrayWithArray:[self.navigationController viewControllers]];
-    [viewControllers replaceObjectAtIndex:1 withObject:browser];
-    [self.navigationController setViewControllers:viewControllers];
-    
-    [self.navigationController popToViewController:browser animated:YES];
-}
-
 #pragma mark - Load Assets
-
 - (void)loadAlbumAssetsWithAssetType:(ALAssetsGroupType) assetGroupType {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
@@ -340,7 +303,6 @@
                                   failureBlock:^(NSError *error){
                                       dispatch_semaphore_signal(sema);
                                   }];
-                    
                 }
             }
         };
@@ -348,6 +310,32 @@
         [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:assetEnumerator];
         dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     });
+}
+
+#pragma mark Logic functions
+- (void) addSelectedPhotoFromPhotoBrowser:(MWPhotoBrowser *)photoBrowser {
+    _photos = [_selectedPhotos copy];
+    _thumbs = [_photos copy];
+    
+    [_photoCollectionVC.photos addObjectsFromArray:_photos];
+    _photoCollectionVC.thumbs = [_photoCollectionVC.photos copy];
+    
+    // Create browser
+    MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:_photoCollectionVC];
+    browser.displayActionButton = NO;
+    browser.displayNavArrows = YES;
+    browser.enableGrid = NO;
+    browser.startOnGrid = YES;
+    browser.enableSwipeToDismiss = YES;
+    [browser setCurrentPhotoIndex:0];
+    browser.allowRightBtnOnNavigation = YES;
+    browser.showAddSelectedPhotoBtn = NO;
+    
+    NSMutableArray * viewControllers = [NSMutableArray arrayWithArray:[self.navigationController viewControllers]];
+    [viewControllers replaceObjectAtIndex:1 withObject:browser];
+    [self.navigationController setViewControllers:viewControllers];
+    
+    [self.navigationController popToViewController:browser animated:YES];
 }
 
 #pragma mark Navigation handling
